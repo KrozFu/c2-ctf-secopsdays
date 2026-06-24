@@ -4,6 +4,7 @@ El estado vive en RAM (sin base de datos): al reiniciar el servidor se limpia.
 Es suficiente para una demo de CTF y evita dependencias externas.
 """
 import shlex
+import threading
 import time
 import uuid
 from functools import wraps
@@ -50,9 +51,10 @@ class AgentStore:
 
     def __init__(self):
         self._lock = Lock()
-        self.agents = {}   # agent_id -> info
-        self.tasks = {}    # agent_id -> [task, ...]
-        self.results = []  # lista de resultados
+        self.agents = {}         # agent_id -> info
+        self.tasks = {}          # agent_id -> [task, ...]
+        self.results = []        # lista de resultados
+        self._result_events = {} # task_id -> threading.Event
 
     def register(self, info, agent_id=None):
         with self._lock:
@@ -85,8 +87,10 @@ class AgentStore:
         with self._lock:
             if agent_id not in self.agents:
                 return None
+            task_id = str(uuid.uuid4())
+            self._result_events[task_id] = threading.Event()
             task = {
-                "task_id": str(uuid.uuid4()),
+                "task_id": task_id,
                 "command": command,
                 "status": "pending",
             }
@@ -113,6 +117,24 @@ class AgentStore:
                 if task["task_id"] == task_id:
                     task["status"] = "done"
                     break
+            event = self._result_events.pop(task_id, None)
+        # Señalar fuera del lock para evitar deadlock
+        if event:
+            event.set()
+
+    def wait_for_result(self, agent_id, task_id, timeout=25):
+        """Bloquea hasta que llegue el resultado para task_id (long poll).
+
+        Retorna el dict del resultado o None si expira el timeout.
+        """
+        event = self._result_events.get(task_id)
+        if event:
+            event.wait(timeout=timeout)
+        with self._lock:
+            for r in self.results:
+                if r["task_id"] == task_id and r["agent_id"] == agent_id:
+                    return r
+        return None
 
     def _refresh_status(self):
         threshold = config.HEARTBEAT_INTERVAL * config.STALE_MULTIPLIER

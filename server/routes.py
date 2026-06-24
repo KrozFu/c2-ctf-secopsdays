@@ -123,3 +123,19 @@ def list_agents():
 @require_token
 def list_results(agent_id):
     return jsonify({"results": store.results_for(agent_id)})
+
+
+@api.route("/wait_result/<agent_id>/<task_id>", methods=["GET"])
+@require_token
+def wait_result(agent_id, task_id):
+    """Long poll: mantiene la conexión abierta hasta que llega el resultado."""
+    try:
+        timeout = min(int(request.args.get("timeout", 25)), 60)
+    except (ValueError, TypeError):
+        timeout = 25
+    result = store.wait_for_result(agent_id, task_id, timeout=timeout)
+    if result:
+        log.info("WAIT_RESULT agent=%s task=%s found", agent_id, task_id)
+        return jsonify({"result": result})
+    log.info("WAIT_RESULT agent=%s task=%s timeout", agent_id, task_id)
+    return jsonify({"result": None, "timeout": True}), 408
