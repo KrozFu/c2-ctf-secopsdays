@@ -114,8 +114,8 @@ function renderAgent(agent) {
                        id="cmd-${agent.agent_id}"
                        placeholder="Enter command (whoami, ls, cat, ps...)"
                        onkeypress="if(event.key==='Enter') executeCommand('${agent.agent_id}')">
-                <button onclick="executeCommand('${agent.agent_id}')">Send</button>
-                <button onclick="refreshResults('${agent.agent_id}')" style="background: #666;">Refresh</button>
+                <button class="cmd-send" onclick="executeCommand('${agent.agent_id}')">Send</button>
+                <button class="cmd-refresh" onclick="refreshResults('${agent.agent_id}')">Refresh</button>
             </div>
             <div class="agent-result ${result ? 'visible' : ''} ${result?.error ? 'error' : 'success'}"
                  id="result-${agent.agent_id}">

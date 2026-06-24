@@ -1,3 +1,20 @@
+/* === PALETTE ==============================================
+   bg-dark:    #080808   (fondo base)
+   bg-surface: #111111   (paneles)
+   bg-panel:   #1a1a1a   (cards)
+   border:     #2a2a2a   (bordes sutiles)
+   border-hi:  #3a3a3a
+   text:       #c8c8c8
+   text-dim:   #555555
+   accent:     #f5c518   (amarillo - activo / online)
+   accent-dim: #8a6e00   (amarillo oscuro)
+   danger:     #cc2222   (rojo - offline / error)
+   danger-hi:  #ff3333
+   warn:       #ff8c00   (naranja - TEST badge)
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -5,16 +22,34 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #1a1a2e;
-    color: #e0e0e0;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    background: #080808;
+    color: #c8c8c8;
     min-height: 100vh;
 }
 
+/* ── HEADER ─────────────────────────────────────────────── */
+
 header {
-    background: #16213e;
+    background: #080808;
     padding: 1rem 2rem;
-    border-bottom: 2px solid #0f3460;
+    border-bottom: 1px solid #2a2a2a;
+    position: relative;
+    overflow: hidden;
+}
+
+header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(245, 197, 24, 0.015) 2px,
+        rgba(245, 197, 24, 0.015) 4px
+    );
+    pointer-events: none;
 }
 
 .header-content {
@@ -26,22 +61,34 @@ header {
 }
 
 h1 {
-    font-size: 1.5rem;
-    color: #00d9ff;
+    font-size: 1.4rem;
+    color: #f5c518;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+h1::before {
+    content: '// ';
+    color: #555555;
 }
 
 .nonce {
-    font-family: monospace;
-    background: #0f3460;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    background: #111111;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #2a2a2a;
+    font-size: 0.8rem;
+    color: #555555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .nonce span {
-    color: #00ff88;
+    color: #f5c518;
     font-weight: bold;
 }
+
+/* ── MAIN ───────────────────────────────────────────────── */
 
 main {
     max-width: 1400px;
@@ -49,193 +96,275 @@ main {
     padding: 2rem;
 }
 
+/* ── STATS ──────────────────────────────────────────────── */
+
 .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
     margin-bottom: 2rem;
+    border: 1px solid #2a2a2a;
 }
 
 .stat-box {
-    background: #16213e;
-    padding: 1.5rem;
-    border-radius: 8px;
+    background: #111111;
+    padding: 1.25rem 1.5rem;
     text-align: center;
-    border: 1px solid #0f3460;
+    border-right: 1px solid #2a2a2a;
+    position: relative;
 }
 
-.stat-box.online {
-    border-color: #00ff88;
+.stat-box:last-child {
+    border-right: none;
 }
 
-.stat-box.offline {
-    border-color: #ff4757;
+.stat-box::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: #2a2a2a;
 }
+
+.stat-box.online::after  { background: #f5c518; }
+.stat-box.offline::after { background: #cc2222; }
 
 .stat-value {
     display: block;
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: bold;
-    color: #00d9ff;
+    color: #c8c8c8;
 }
 
-.stat-box.online .stat-value {
-    color: #00ff88;
-}
-
-.stat-box.offline .stat-value {
-    color: #ff4757;
-}
+.stat-box.online  .stat-value { color: #f5c518; }
+.stat-box.offline .stat-value { color: #cc2222; }
 
 .stat-label {
     display: block;
-    font-size: 0.85rem;
-    color: #888;
-    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: #555555;
+    margin-top: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
+/* ── AGENTS CONTAINER ───────────────────────────────────── */
+
 .agents-container {
-    background: #16213e;
-    border-radius: 8px;
+    background: #111111;
     padding: 1.5rem;
-    border: 1px solid #0f3460;
+    border: 1px solid #2a2a2a;
 }
 
 .agents-container h2 {
-    margin-bottom: 1rem;
-    color: #00d9ff;
-    font-size: 1.2rem;
+    margin-bottom: 1.25rem;
+    color: #555555;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    border-bottom: 1px solid #2a2a2a;
+    padding-bottom: 0.75rem;
 }
 
+.agents-container h2::before {
+    content: '> ';
+    color: #f5c518;
+}
+
+/* ── AGENT CARD ─────────────────────────────────────────── */
+
 .agent-card {
-    background: #1a1a2e;
-    border-radius: 6px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid #00ff88;
+    background: #0e0e0e;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1px;
+    border-left: 3px solid #f5c518;
+    border-bottom: 1px solid #1a1a1a;
+    transition: border-color 0.15s;
+}
+
+.agent-card:last-child {
+    border-bottom: none;
+}
+
+.agent-card:hover {
+    background: #111111;
 }
 
 .agent-card.offline {
-    border-left-color: #ff4757;
-    opacity: 0.7;
+    border-left-color: #cc2222;
+    opacity: 0.65;
 }
 
 .agent-card.local-agent {
-    border-left-color: #f5a623;
-    opacity: 0.85;
+    border-left-color: #ff8c00;
 }
 
-.agent-badge-test {
-    padding: 0.2rem 0.6rem;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    background: #f5a623;
-    color: #1a1a2e;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
+/* ── AGENT HEADER ───────────────────────────────────────── */
 
 .agent-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
+    gap: 0.75rem;
 }
 
 .agent-id {
-    font-family: monospace;
-    font-size: 0.85rem;
-    color: #00d9ff;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #555555;
+    flex: 1;
+}
+
+.agent-id::before {
+    content: '[';
+    color: #3a3a3a;
+}
+
+.agent-id::after {
+    content: ']';
+    color: #3a3a3a;
+}
+
+.agent-badge-test {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: bold;
+    background: transparent;
+    color: #ff8c00;
+    border: 1px solid #ff8c00;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .agent-status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.65rem;
     font-weight: bold;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: 1px solid;
 }
 
 .agent-status.online {
-    background: #00ff88;
-    color: #1a1a2e;
+    color: #f5c518;
+    border-color: #f5c518;
+    background: rgba(245, 197, 24, 0.07);
 }
 
 .agent-status.offline {
-    background: #ff4757;
-    color: white;
+    color: #cc2222;
+    border-color: #cc2222;
+    background: rgba(204, 34, 34, 0.07);
 }
+
+/* ── AGENT INFO GRID ────────────────────────────────────── */
 
 .agent-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 0.5rem;
-    font-size: 0.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem;
+    font-size: 0.85rem;
     margin-bottom: 1rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
 }
 
 .agent-info div {
     display: flex;
     flex-direction: column;
+    gap: 0.2rem;
 }
 
 .agent-info label {
-    color: #888;
-    font-size: 0.75rem;
+    color: #3a3a3a;
+    font-size: 0.65rem;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 .agent-info span {
-    color: #e0e0e0;
+    color: #c8c8c8;
 }
+
+/* ── COMMAND INPUT ──────────────────────────────────────── */
 
 .agent-commands {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .agent-commands input {
     flex: 1;
     min-width: 200px;
-    padding: 0.5rem;
-    background: #0f3460;
-    border: 1px solid #1a1a2e;
-    border-radius: 4px;
-    color: #e0e0e0;
-    font-family: monospace;
+    padding: 0.45rem 0.75rem;
+    background: #080808;
+    border: 1px solid #2a2a2a;
+    color: #c8c8c8;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.agent-commands input::placeholder {
+    color: #333333;
 }
 
 .agent-commands input:focus {
     outline: none;
-    border-color: #00d9ff;
+    border-color: #f5c518;
 }
 
-.agent-commands button {
-    padding: 0.5rem 1rem;
-    background: #00d9ff;
-    color: #1a1a2e;
+.cmd-send {
+    padding: 0.45rem 1rem;
+    background: #f5c518;
+    color: #080808;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
     font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.agent-commands button:hover {
-    background: #00b8d4;
+.cmd-send:hover {
+    background: #ffd93d;
 }
+
+.cmd-refresh {
+    padding: 0.45rem 0.9rem;
+    background: transparent;
+    color: #555555;
+    border: 1px solid #2a2a2a;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cmd-refresh:hover {
+    border-color: #555555;
+    color: #c8c8c8;
+}
+
+/* ── RESULT OUTPUT ──────────────────────────────────────── */
 
 .agent-result {
     margin-top: 0.75rem;
-    padding: 0.75rem;
-    background: #0f3460;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+    background: #080808;
+    border: 1px solid #1a1a1a;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
     white-space: pre-wrap;
     word-break: break-all;
+    color: #c8c8c8;
     display: none;
+    line-height: 1.5;
 }
 
 .agent-result.visible {
@@ -243,27 +372,39 @@ main {
 }
 
 .agent-result.error {
-    border-left: 3px solid #ff4757;
+    border-left: 2px solid #cc2222;
+    color: #ff5555;
 }
 
 .agent-result.success {
-    border-left: 3px solid #00ff88;
+    border-left: 2px solid #f5c518;
 }
+
+/* ── LOADING / EMPTY ────────────────────────────────────── */
 
 .loading {
     text-align: center;
-    color: #888;
-    padding: 2rem;
+    color: #333333;
+    padding: 2.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
+
+/* ── FOOTER ─────────────────────────────────────────────── */
 
 footer {
     text-align: center;
     padding: 1rem;
-    color: #666;
-    font-size: 0.8rem;
-    border-top: 1px solid #0f3460;
+    color: #2a2a2a;
+    font-size: 0.7rem;
+    border-top: 1px solid #1a1a1a;
     margin-top: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
 
 @media (max-width: 768px) {
     .header-content {
@@ -284,5 +425,14 @@ footer {
 
     .agent-commands input {
         min-width: 100%;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-box {
+        border-right: none;
+        border-bottom: 1px solid #2a2a2a;
     }
 }
