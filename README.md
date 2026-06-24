@@ -134,6 +134,7 @@ http://127.0.0.1:8080/dashboard
 ```
 
 El dashboard muestra:
+
 - Lista de agents conectados con status (online/offline)
 - Envío de comandos directamente desde la interfaz
 - Resultados en tiempo real
