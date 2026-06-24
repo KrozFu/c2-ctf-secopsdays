@@ -38,13 +38,14 @@ TEAM NONCE: sentrysec-2026
 │   │   └── socks.py     # Cliente SOCKS5
 │   └── requirements.txt
 ├── build/               # Scripts de compilación
-│   ├── build_linux.sh   # Build implant Linux
-│   ├── build_windows.sh # Build implant Windows
-│   └── build_all.sh     # Build ambos
+│   ├── build_linux.sh            # Build implant Linux
+│   ├── build_windows.sh          # Build implant Windows (Wine)
+│   ├── build_windows_native.ps1  # Build implant Windows nativo (PowerShell)
+│   └── build_all.sh              # Build ambos
 ├── profiles/            # Profiles de configuración
 │   ├── default.yaml
 │   └── example.yaml
-├── tests/               # Suite de pruebas (119 tests)
+├── tests/               # Suite de pruebas (141 tests)
 │   ├── conftest.py
 │   ├── test_models.py
 │   ├── test_routes.py
@@ -193,6 +194,10 @@ curl -H "X-Auth-Token: supersecret-ctf-token" \
 | POST | `/socks/stop` | Detener servidor SOCKS5 |
 | GET | `/socks/status` | Estado del servidor SOCKS5 |
 | GET | `/socks/channels` | Listar canales SOCKS activos |
+| POST | `/socks/connect` | Crear canal a un target (operador → implant) |
+| GET | `/socks/data/<channel_id>` | Implant consulta datos pendientes |
+| POST | `/socks/data/<channel_id>` | Implant envía datos del target |
+| POST | `/socks/connected/<channel_id>` | Implant reporta conexión exitosa |
 
 ---
 
@@ -248,11 +253,28 @@ pip install pyinstaller
 # Output: dist/implant-linux
 ```
 
-### Build Windows
+### Build Windows (nativo, recomendado)
+
+Desde PowerShell en la máquina Windows:
+
+```powershell
+.\build\build_windows_native.ps1
+# Output: dist/implant.exe (background, sin ventana de consola)
+
+# Con icono personalizado
+.\build\build_windows_native.ps1 -IconPath ".\build\assets\implant.ico"
+
+# Sin compresión UPX
+.\build\build_windows_native.ps1 -NoUpx
+```
+
+### Build Windows (cross-compile con Wine)
+
+Requiere Python instalado **dentro** de Wine:
 
 ```bash
 ./build/build_windows.sh
-# Output: dist/implant.exe (requiere Wine para cross-compilation)
+# Output: dist/implant.exe
 ```
 
 ### Build ambos
@@ -275,7 +297,13 @@ pip install pyinstaller
 
 ## Pivoting (SOCKS5 Proxy)
 
-El C2 incluye un servidor SOCKS5 para pivoting a través de máquinas comprometidas.
+El C2 incluye un servidor SOCKS5 funcional para pivoting a través de máquinas comprometidas.
+
+### Flujo SOCKS5
+
+```
+[Operador] → localhost:1080 → [Server SOCKS] → C2 Channel → [Implant] → [Target]
+```
 
 ### Iniciar proxy SOCKS
 
@@ -284,6 +312,25 @@ curl -X POST -H "X-Auth-Token: supersecret-ctf-token" \
   -H "Content-Type: application/json" \
   -d '{"host": "127.0.0.1", "port": 1080}' \
   http://127.0.0.1:8080/socks/start
+```
+
+### Crear canal SOCKS a un target
+
+```bash
+# El operador solicita conexión a un target a través de un implant
+curl -X POST -H "X-Auth-Token: supersecret-ctf-token" \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id": "<AGENT_ID>", "target_host": "10.0.0.5", "target_port": 22}' \
+  http://127.0.0.1:8080/socks/connect
+
+# Respuesta: {"status":"ok","channel_id":"socks_1234567890","target":"10.0.0.5:22"}
+```
+
+### Ver canales activos
+
+```bash
+curl -H "X-Auth-Token: supersecret-ctf-token" \
+  http://127.0.0.1:8080/socks/channels
 ```
 
 ### Usar proxy
@@ -389,6 +436,10 @@ curl -H "X-Auth-Token: supersecret-ctf-token" \
 
 ### Comandos permitidos (whitelist)
 
+El implant selecciona automáticamente la whitelist según el OS donde corre.
+
+#### Linux
+
 | Comando | Descripción |
 |---------|-------------|
 | `whoami` | Usuario actual |
@@ -403,6 +454,23 @@ curl -H "X-Auth-Token: supersecret-ctf-token" \
 | `date` | Fecha y hora actual |
 | `uptime` | Tiempo de actividad |
 | `df` | Espacio en disco |
+
+#### Windows
+
+| Comando | Descripción |
+|---------|-------------|
+| `whoami` | Usuario actual |
+| `hostname` | Nombre del host |
+| `ipconfig` | Configuración de red |
+| `dir` | Listar archivos |
+| `tasklist` | Procesos en ejecución |
+| `net` | Info de red y usuarios |
+| `systeminfo` | Info del sistema |
+| `echo` | Mostrar texto |
+| `type` | Mostrar contenido de archivo |
+| `ping` | Verificar conectividad |
+| `cat` | Mostrar archivo (PowerShell) |
+| `ps` | Procesos (PowerShell) |
 
 ---
 
@@ -531,14 +599,15 @@ python -m pytest tests/ --cov=. --cov-report=term-missing
 
 ```
 tests/
-├── conftest.py           # Fixtures compartidos (client Flask, auth headers)
+├── conftest.py           # Fixtures compartidos (client Flask, auth headers, fresh_store)
 ├── test_models.py        # Unitarias: whitelist de comandos, AgentStore, thread-safety
 ├── test_routes.py        # Integración: todos los endpoints Flask
 ├── test_implant.py       # Unitarias: whitelist local, generate_id, collect_info
 ├── test_security.py      # Seguridad: inyección de comandos, auth en todos los endpoints
-├── test_profiles.py      # Profiles YAML, Listener class
+├── test_profiles.py      # Profiles YAML, Listener class, global LISTENER
 ├── test_jitter.py        # Jitter calculation
-└── test_new_features.py  # Dashboard, SOCKS5, módulos
+├── test_new_features.py  # Dashboard, SOCKS5 endpoints, módulos implant
+└── test_e2e.py           # Tests de integración end-to-end
 ```
 
 ### Cobertura por módulo
@@ -549,6 +618,7 @@ tests/
 | `routes.py` | 18 | Health, register, heartbeat, task, result, agents, auth negativa |
 | `implant.py` | 7 | Whitelist local, generate_id determinista, collect_info |
 | `security.py` | 32 | 16 payloads de inyección × 2 endpoints, auth en 6 endpoints, visibilidad del NONCE |
-| `profiles.py` | 15 | Carga YAML, Listener class, valores por defecto |
+| `profiles.py` | 18 | Carga YAML, Listener class, global LISTENER, valores por defecto |
 | `jitter.py` | 6 | Rango de jitter, determinismo, siempre positivo |
-| `new_features.py` | 10 | Dashboard HTML, SOCKS5 endpoints, módulos implant |
+| `new_features.py` | 28 | Dashboard HTML+token, SOCKS5 start/stop/status/channels/connect/data, módulos implant |
+| `test_e2e.py` | 12 | Flujo completo register→task→result, múltiples comandos, comandos rechazados, SOCKS connect |
