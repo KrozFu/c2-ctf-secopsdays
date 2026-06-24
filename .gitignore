@@ -27,9 +27,10 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
+# PyInstaller intermediate build artifacts (regenerados en cada build)
+implant/build/
 downloads/
 eggs/
 .eggs/
@@ -189,3 +190,7 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+# Implants
+.implant.pid
+.server.pid
