@@ -1,0 +1,47 @@
+# =============================================================================
+# C2 CTF SecOpsDays - Profile de ejemplo (evasión básica)
+# =============================================================================
+# Profile personalizado para simular tráfico web legítimo.
+# Usa URIs, headers y configuración que parecen tráfico normal.
+# =============================================================================
+
+# Configuración del Listener (servidor C2)
+listener:
+  host: "0.0.0.0"
+  port: 443
+  protocol: "https"
+
+  # URIs que parecen tráfico web normal
+  uris:
+    - "/api/v2/health"
+    - "/cdn/assets/bundle.js"
+    - "/static/css/main.css"
+
+  # Headers que parecen navegador real
+  headers:
+    user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    content_type: "application/json"
+    accept: "application/json, text/plain, */*"
+    accept_language: "en-US,en;q=0.9"
+    accept_encoding: "gzip, deflate, br"
+
+  # Headers de respuesta (parece servidor real)
+  response:
+    server: "cloudflare"
+    headers:
+      Cache-Control: "public, max-age=3600"
+      X-Frame-Options: "DENY"
+      X-Content-Type-Options: "nosniff"
+
+# Configuración del Agent (implant)
+agent:
+  sleep: 120             # Sleep más largo (2 minutos)
+  jitter: 50             # ±50% → sleep entre 60s y 180s
+  timeout: 30            # Timeout más largo
+  retry_delay: 10        # Reintentar cada 10s
+  encryption: false
+
+# Configuración de Operadores
+operators:
+  - name: "operator1"
+    token: "token-evasivo-aqui-cambiar"

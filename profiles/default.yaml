@@ -1,0 +1,46 @@
+# =============================================================================
+# C2 CTF SecOpsDays - Profile por defecto
+# =============================================================================
+# Este archivo define la configuración del C2 server y el agent.
+# Puede ser personalizado para diferentes entornos de CTF.
+# =============================================================================
+
+# Configuración del Listener (servidor C2)
+listener:
+  host: "0.0.0.0"
+  port: 8080
+  protocol: "http"
+
+  # URIs del API (para evasión de IDS/IPS)
+  uris:
+    - "/register"
+    - "/heartbeat"
+    - "/task"
+    - "/result"
+    - "/agents"
+    - "/results"
+
+  # Headers falsos para parecer tráfico legítimo
+  headers:
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    content_type: "application/json"
+
+  # Headers de respuesta del servidor
+  response:
+    server: "nginx/1.24.0"
+    headers:
+      X-Powered-By: "Flask"
+      Cache-Control: "no-cache"
+
+# Configuración del Agent (implant)
+agent:
+  sleep: 30              # Intervalo base de heartbeat (segundos)
+  jitter: 50             # Jitter ±50% → sleep entre 15s y 45s
+  timeout: 15            # Timeout de ejecución de comandos
+  retry_delay: 5         # Delay entre reintentos de registro
+  encryption: false      # Encriptación (implementar en Fase 2)
+
+# Configuración de Operadores
+operators:
+  - name: "admin"
+    token: "supersecret-ctf-token"
