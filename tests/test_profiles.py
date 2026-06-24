@@ -18,8 +18,8 @@ class TestLoadProfile:
         profile = load_profile("profiles/default.yaml")
         assert profile["listener"]["host"] == "0.0.0.0"
         assert profile["listener"]["port"] == 8080
-        assert profile["agent"]["sleep"] == 30
-        assert profile["agent"]["jitter"] == 50
+        assert profile["agent"]["sleep"] == 5
+        assert profile["agent"]["jitter"] == 20
 
     def test_example_profile_values(self):
         profile = load_profile("profiles/example.yaml")

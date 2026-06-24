@@ -34,8 +34,8 @@ listener:
 
 # Configuración del Agent (implant)
 agent:
-  sleep: 30              # Intervalo base de heartbeat (segundos)
-  jitter: 50             # Jitter ±50% → sleep entre 15s y 45s
+  sleep: 5               # Intervalo base de heartbeat (segundos)
+  jitter: 20             # Jitter ±20% → sleep entre 4s y 6s
   timeout: 15            # Timeout de ejecución de comandos
   retry_delay: 5         # Delay entre reintentos de registro
   encryption: false      # Encriptación (implementar en Fase 2)
