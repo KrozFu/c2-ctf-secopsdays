@@ -120,6 +120,22 @@ main {
     opacity: 0.7;
 }
 
+.agent-card.local-agent {
+    border-left-color: #f5a623;
+    opacity: 0.85;
+}
+
+.agent-badge-test {
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    background: #f5a623;
+    color: #1a1a2e;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 .agent-header {
     display: flex;
     justify-content: space-between;
