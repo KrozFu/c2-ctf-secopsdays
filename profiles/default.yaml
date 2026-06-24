@@ -7,7 +7,7 @@
 
 # Configuración del Listener (servidor C2)
 listener:
-  host: "192.168.1.121"
+  host: "0.0.0.0"
   port: 8080
   protocol: "http"
 
