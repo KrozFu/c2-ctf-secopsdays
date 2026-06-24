@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "server"))
 
 from app import create_app
-from models import AgentStore, store
+from models import store
 
 
 import pytest
@@ -25,13 +25,23 @@ def auth_headers():
 
 @pytest.fixture
 def fresh_store():
+    """Crea un AgentStore limpio por test sin mutar el global.
+
+    Guarda y restaura el state global al final para no afectar otros tests.
+    """
     old_agents = store.agents.copy()
     old_tasks = store.tasks.copy()
     old_results = store.results[:]
+
     store.agents.clear()
     store.tasks.clear()
     store.results.clear()
+
     yield store
+
+    store.agents.clear()
     store.agents.update(old_agents)
+    store.tasks.clear()
     store.tasks.update(old_tasks)
-    store.results[:] = old_results
+    store.results.clear()
+    store.results.extend(old_results)

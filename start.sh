@@ -101,8 +101,7 @@ stop_existing() {
 start_server() {
     echo -e "${YELLOW}[3/4] Iniciando servidor C2...${NC}"
     
-    cd "$SERVER_DIR"
-    python app.py > "$SERVER_LOG" 2>&1 &
+    python "$SERVER_DIR/app.py" > "$SERVER_LOG" 2>&1 &
     SERVER_PID=$!
     echo "$SERVER_PID" > "$SERVER_PID_FILE"
     
@@ -124,8 +123,7 @@ start_server() {
 start_implant() {
     echo -e "${YELLOW}[4/4] Iniciando implant...${NC}"
     
-    cd "$IMPLANT_DIR"
-    C2_URL="http://127.0.0.1:$C2_PORT" python implant.py > "$IMPLANT_LOG" 2>&1 &
+    C2_URL="http://127.0.0.1:$C2_PORT" python "$IMPLANT_DIR/implant.py" > "$IMPLANT_LOG" 2>&1 &
     IMPLANT_PID=$!
     echo "$IMPLANT_PID" > "$IMPLANT_PID_FILE"
     

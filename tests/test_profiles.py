@@ -1,12 +1,10 @@
-import pytest
-import yaml
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "server"))
 
-from config import load_profile
-from listener import Listener, load_listener, create_listener_from_config
+from config import load_profile, LISTENER
+from listener import Listener
 
 
 class TestLoadProfile:
@@ -95,17 +93,17 @@ class TestListener:
         assert "8080" in repr(listener)
 
 
-class TestLoadListener:
-    def test_load_from_default_profile(self):
-        listener = load_listener("profiles/default.yaml")
-        assert listener.host == "0.0.0.0"
-        assert listener.port == 8080
+class TestGlobalListener:
+    """Tests for the global LISTENER instance created by config.py."""
 
-    def test_load_from_example_profile(self):
-        listener = load_listener("profiles/example.yaml")
-        assert listener.port == 443
-        assert listener.protocol == "https"
+    def test_global_listener_exists(self):
+        assert LISTENER is not None
 
-    def test_load_nonexistent_profile_fallback(self):
-        listener = load_listener("profiles/nonexistent.yaml")
-        assert listener.host == "0.0.0.0"
+    def test_global_listener_from_default_profile(self):
+        assert LISTENER.host == "0.0.0.0"
+        assert LISTENER.port == 8080
+        assert LISTENER.protocol == "http"
+
+    def test_global_listener_has_uris(self):
+        uris = LISTENER.get_callback_uris()
+        assert isinstance(uris, list)

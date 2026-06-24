@@ -1,5 +1,4 @@
-import pytest
-from models import is_command_allowed, require_token, AgentStore
+from models import is_command_allowed
 
 
 class TestIsCommandAllowed:
