@@ -9,6 +9,7 @@ from flask import Flask
 
 import config
 from routes import api
+from routes_socks import socks_api
 
 
 def setup_logging():
@@ -37,13 +38,17 @@ def print_banner():
     print(f"  Listening  : http://{config.HOST}:{config.PORT}")
     print(f"  Auth token : {config.AUTH_TOKEN}")
     print(f"  Heartbeat  : {config.HEARTBEAT_INTERVAL}s")
+    print(f"  Dashboard  : http://{config.HOST}:{config.PORT}/dashboard")
     print("  " + "-" * 48)
     print("  Solo para uso en CTF / entornos autorizados.\n")
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__,
+                static_folder="static",
+                template_folder="templates")
     app.register_blueprint(api)
+    app.register_blueprint(socks_api)
     return app
 
 

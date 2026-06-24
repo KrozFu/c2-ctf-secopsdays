@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C2 CTF SecOpsDays - Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1>C2 CTF SecOpsDays</h1>
+            <div class="nonce">NONCE: <span id="nonce">{{ nonce }}</span></div>
+        </div>
+    </header>
+
+    <main>
+        <div class="stats">
+            <div class="stat-box">
+                <span class="stat-value" id="total-agents">0</span>
+                <span class="stat-label">Total Agents</span>
+            </div>
+            <div class="stat-box online">
+                <span class="stat-value" id="online-agents">0</span>
+                <span class="stat-label">Online</span>
+            </div>
+            <div class="stat-box offline">
+                <span class="stat-value" id="offline-agents">0</span>
+                <span class="stat-label">Offline</span>
+            </div>
+        </div>
+
+        <div class="agents-container">
+            <h2>Connected Agents</h2>
+            <div id="agents-list">
+                <p class="loading">Loading agents...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Solo para uso en CTF / entornos autorizados</p>
+    </footer>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+
+</html>

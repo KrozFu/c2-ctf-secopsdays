@@ -1,7 +1,7 @@
 """Endpoints HTTP del C2 server (Flask Blueprint)."""
 import logging
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
 
 import config
 from models import is_command_allowed, require_token, store
@@ -20,6 +20,7 @@ def index():
         "status": "running",
         "endpoints": {
             "health": "/health",
+            "dashboard": "/dashboard",
             "register": "POST /register",
             "heartbeat": "POST /heartbeat",
             "task": "GET|POST /task/<agent_id>",
@@ -28,6 +29,12 @@ def index():
             "results": "GET /results/<agent_id>",
         },
     })
+
+
+@api.route("/dashboard", methods=["GET"])
+def dashboard():
+    """Dashboard visual para el operador (sin auth para CTF)."""
+    return render_template("index.html", nonce=config.NONCE)
 
 
 @api.route("/health", methods=["GET"])
