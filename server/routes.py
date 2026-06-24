@@ -34,7 +34,7 @@ def index():
 @api.route("/dashboard", methods=["GET"])
 def dashboard():
     """Dashboard visual para el operador (sin auth para CTF)."""
-    return render_template("index.html", nonce=config.NONCE)
+    return render_template("index.html", nonce=config.NONCE, auth_token=config.AUTH_TOKEN)
 
 
 @api.route("/health", methods=["GET"])

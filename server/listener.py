@@ -2,16 +2,22 @@
 
 Un Listener define cómo el servidor C2 escucha conexiones de los agents.
 Incluye URIs, headers falsos y configuración de respuesta para evasión.
+
+La carga del YAML se realiza UNA SOLA VEZ en config.py. Esta clase
+solo encapsula la configuración en un objeto con métodos de acceso.
 """
-import yaml
-from pathlib import Path
 
 
 class Listener:
     """Representa un listener del C2 server."""
 
     def __init__(self, config):
-        """Inicializa el listener desde un diccionario de configuración."""
+        """Inicializa el listener desde un diccionario de configuración.
+
+        Args:
+            config: Diccionario con la sección ``listener`` del profile YAML.
+                    Se carga en config.py y se pasa como argumento.
+        """
         self.host = config.get("host", "0.0.0.0")
         self.port = config.get("port", 8080)
         self.protocol = config.get("protocol", "http")
@@ -45,19 +51,3 @@ class Listener:
 
     def __repr__(self):
         return f"Listener(host={self.host!r}, port={self.port}, protocol={self.protocol!r})"
-
-
-def load_listener(profile_path="profiles/default.yaml"):
-    """Carga un listener desde un archivo profile YAML."""
-    try:
-        with open(profile_path) as f:
-            config = yaml.safe_load(f)
-        return Listener(config.get("listener", {}))
-    except FileNotFoundError:
-        # Fallback a configuración por defecto
-        return Listener({})
-
-
-def create_listener_from_config(config):
-    """Crea un Listener desde un diccionario de configuración directo."""
-    return Listener(config)

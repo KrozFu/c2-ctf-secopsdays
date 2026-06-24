@@ -34,11 +34,15 @@ def print_banner():
     print(banner)
     print("  C2 CTF SecOpsDays — Command & Control")
     print("  " + "-" * 48)
-    print(f"  TEAM NONCE : {config.NONCE}")
-    print(f"  Listening  : http://{config.HOST}:{config.PORT}")
-    print(f"  Auth token : {config.AUTH_TOKEN}")
-    print(f"  Heartbeat  : {config.HEARTBEAT_INTERVAL}s")
-    print(f"  Dashboard  : http://{config.HOST}:{config.PORT}/dashboard")
+    print(f"  TEAM NONCE  : {config.NONCE}")
+    print(f"  Listening   : http://{config.HOST}:{config.PORT}")
+    print(f"  Auth token  : {config.AUTH_TOKEN}")
+    print(f"  Heartbeat   : {config.HEARTBEAT_INTERVAL}s")
+    print(f"  Dashboard   : http://{config.HOST}:{config.PORT}/dashboard")
+    if config.CALLBACK_URIS:
+        print(f"  Callback URIs: {', '.join(config.CALLBACK_URIS)}")
+    print(f"  Protocol    : {config.LISTENER.protocol}")
+    print(f"  Fake Server : {config.LISTENER.get_server_header() or '(none)'}")
     print("  " + "-" * 48)
     print("  Solo para uso en CTF / entornos autorizados.\n")
 
@@ -47,6 +51,7 @@ def create_app():
     app = Flask(__name__,
                 static_folder="static",
                 template_folder="templates")
+    # No CORS needed: dashboard y API se sirven desde el mismo origin.
     app.register_blueprint(api)
     app.register_blueprint(socks_api)
     return app
